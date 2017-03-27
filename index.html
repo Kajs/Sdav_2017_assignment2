@@ -176,13 +176,16 @@
             function view2003() {
                     svg.selectAll("circle")
                     .data(dataset2003)
+                    .transition()
+                    .duration(1000)
                     .attr("cx", function(d) { return xScale(d[0]); }) 
                     .attr("cy", function(d) { return yScale(d[1]); }) 
-                    .attr("r", function(d) { return rScale(d[0] + d[1]); });
+                    .attr("r", function(d) { return rScale(d[0] + d[1]); })
                     
                     svg.selectAll("text")
                     .data(dataset2003)
-                    //.text(function(d) { return d[2] + "[" + d[0] + "," + d[1] + "]"; }) 
+                    .transition()
+                    .duration(1000)
                     .text(function(d) { return d[2]; }) 
                     .attr("x", function(d) { return xScale(d[0]) + 8; }) 
                     .attr("y", function(d) { return yScale(d[1]); }) 
@@ -194,13 +197,16 @@
             function view2015() {
                     svg.selectAll("circle")
                     .data(dataset2015)
+                    .transition()
+                    .duration(1000)
                     .attr("cx", function(d) { return xScale(d[0]); }) 
                     .attr("cy", function(d) { return yScale(d[1]); }) 
                     .attr("r", function(d) { return rScale(d[0] + d[1]); });
                     
                     svg.selectAll("text")
                     .data(dataset2015)
-                    //.text(function(d) { return d[2] + "[" + d[0] + "," + d[1] + "]"; }) 
+                    .transition()
+                    .duration(1000)
                     .text(function(d) { return d[2]; }) 
                     .attr("x", function(d) { return xScale(d[0]) + 8; }) 
                     .attr("y", function(d) { return yScale(d[1]); }) 
@@ -213,7 +219,7 @@
         style="position:absolute; left: 5%; top: 20%; height:50px;width:100px"
         onclick="view2003()">
         <input type="button" value="2015" 
-        style="position:absolute; left: 12%; top: 20%; height:50px;width:100px"
+        style="position:absolute; left: 17%; top: 20%; height:50px;width:100px"
         onclick="view2015()">
     </body>
 </html>
