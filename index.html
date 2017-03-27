@@ -9,19 +9,64 @@
         <h1>Social Data Analysis and Visualisation 2017</h1>
         <h2>Assignment 2A: One scatter plot and two datasets</h2>
         <script type="text/javascript">
-            d3.csv("data_2015.csv", function(data) {
+            var dict2003 = {};
+            var dict2015 = {};
+            var dataset2003 = [];
+            var dataset2015 = [];
+            var crimes = ["PROSTITUTION", "VEHICLE THEFT"];
+
+            d3.csv("data_2003.csv", function(data2003) {
+                //console.log(data2003[0]);
+                for (i in data2003) {
+                    if(i == 0 || i % 2 == 0) { continue; }
+                    var district = data2003[i]['PdDistrict'];
+                    if(!dict2003[district]) { 
+                        dict2003[district] = {};
+                        for (c in crimes) { dict2003[district][crimes[c]] = 0; }
+                    }
+                    var crime = data2003[i]['Category'];
+                    dict2003[district][crime] = dict2003[district][crime] + 1;
+                }
+
+                d3.csv("data_2015.csv", function(data2015) {
+                    for (i in data2015) {
+                        if(i == 0 || i % 2 == 0) { continue; }
+                        var district = data2015[i]['PdDistrict'];
+                        if(!dict2015[district]) { 
+                            dict2015[district] = {};
+                            for (c in crimes) { dict2015[district][crimes[c]] = 0; }
+                        }
+                        var crime = data2015[i]['Category'];
+                        dict2015[district][crime] = dict2015[district][crime] + 1;
+                    }
+                    console.log(dict2003);
+                    console.log(dict2015);
+
+                    for (key in dict2003) {
+                        var element_arr = [];
+                        var element_dict = dict2003[key];
+                        for (c in crimes) { element_arr.push(element_dict[crimes[c]]); }
+                        dataset2003.push(element_arr); 
+                    }
+
+                    for (key in dict2015) {
+                        var element_arr = [];
+                        var element_dict = dict2015[key];
+                        for (c in crimes) { element_arr.push(element_dict[crimes[c]]); }
+                        dataset2015.push(element_arr); 
+                    }
+
+                    console.log(dataset2003);
+                    console.log(dataset2015);
+                });
+                //console.log(data[1]['PdDistrict']);
+                
+                //for (key in dict) {}
                 var dataset = [
-                  [ 5,     20 ],
-                  [ 480,   90 ],
-                  [ 250,   50 ],
-                  [ 100,   33 ],
-                  [ 330,   95 ],
-                  [ 410,   12 ],
-                  [ 475,   44 ],
-                  [ 25,    67 ],
-                  [ 85,    21 ],
-                  [ 220,   88 ]
-                  ];
+                    [1, 2],
+                    [3, 4]
+                ];
+                
                 var w = 500;
                 var h = 100;
                 
