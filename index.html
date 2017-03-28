@@ -227,5 +227,37 @@
         <p>
             Using the same axes for both years make for an easy comparison between the same district in the two years. If the axes changed as well, it would be harder to make a direct comparison of position and size as you'd have to compare the values on the axes as well.
         </p>
+        <h2>
+            Assignment 2B: Visualizing geodata
+        </h2>
+        <script type="text/javascript">
+            var w2 = 800;
+			var h2 = 600;
+
+            var svg2 = d3.select("body")
+            .append("svg")
+            .attr("width", w2)
+            .attr("height", h2);
+
+            var width = 918;
+            var height = 800;
+            
+            var projection = d3.geo.mercator()
+            .center([-122.433701, 37.747683])
+            .scale(200000)
+            .translate([width / 2, height / 2]);
+            
+            var path = d3.geo.path()
+            .projection(projection);
+
+            d3.json("sfpddistricts.geojson", function(err, json) {
+                if(err) console.log("error fetching data");
+                svg2.selectAll("path")
+                .data(json.features)
+                .enter()
+                .append("path")
+                .attr("d", path);
+            });
+        </script>
     </body>
 </html>
