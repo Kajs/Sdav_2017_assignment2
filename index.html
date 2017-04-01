@@ -43,7 +43,7 @@
             var rScale;
 
             d3.csv("data_2003.csv", function(data2003) {
-                console.log(data2003[0]); //show keys
+                //console.log(data2003[0]); //show keys
 
                 //load 2003 data
                 for (i in data2003) {
@@ -69,8 +69,8 @@
                         var crime = data2015[i]['Category'];
                         dict2015[district][crime] = dict2015[district][crime] + 1;
                     }
-                    console.log(dict2003);
-                    console.log(dict2015);
+                    //console.log(dict2003);
+                    //console.log(dict2015);
 
                     //copy data from dict to arrays
                     for (key in dict2003) {
@@ -89,8 +89,8 @@
                         dataset2015.push(element_arr); 
                     }
 
-                    console.log(dataset2003);
-                    console.log(dataset2015);
+                    //console.log(dataset2003);
+                    //console.log(dataset2015);
 
 
                     if(year == 2003) { var dataset = dataset2003; }
@@ -111,8 +111,8 @@
                         if(dataset2015[i][1] > largestY) { largestY = dataset2015[i][1]; }
                         if(dataset2015[i][0] + dataset2015[i][1] > largestTotal) { largestTotal =  dataset2015[i][0] + dataset2015[i][1]; }
                     }
-                    console.log("largestY");
-                    console.log(largestY);
+                    //console.log("largestY");
+                    //console.log(largestY);
 
                     //SET scales
                     xScale = d3.scale.linear()
@@ -233,6 +233,8 @@
         <script type="text/javascript">
             var w2 = 800;
 			var h2 = 600;
+            var dict_prostitution = {};
+            var dataset_prostitution = [];
 
             var svg2 = d3.select("body")
             .append("svg")
@@ -257,6 +259,177 @@
                 .enter()
                 .append("path")
                 .attr("d", path);
+            });
+
+            d3.csv("sfpd_prostitution.csv", function(sfpd_prostitution) {
+                //load prostitution data
+                for (i in sfpd_prostitution) {
+                    if(i == 0 || i % 2 == 0) { continue; }
+                    var district = sfpd_prostitution[i]['PdDistrict'];
+                    var point_x = sfpd_prostitution[i]['X'];
+                    var point_y = sfpd_prostitution[i]['Y'];
+                    if(!dict_prostitution[district]) { 
+                        dict_prostitution[district] = {};
+                        dict_prostitution[district]['X'] = 0.0; 
+                        dict_prostitution[district]['Y'] = 0.0; 
+                        dict_prostitution[district]['Length'] = 0.0; 
+                    }
+                    dataset_prostitution.push([point_x, point_y, 0]);
+                    dict_prostitution[district]['X'] += parseFloat(point_x); 
+                    dict_prostitution[district]['Y'] += parseFloat(point_y); 
+                    dict_prostitution[district]['Length'] += 1.0; 
+                }
+
+                //Calculate center of crimes in each district
+                var district_crime_centres = [];
+                for (key in dict_prostitution) {
+                    var center_x = dict_prostitution[key]['X'] / dict_prostitution[key]['Length'];
+                    var center_y = dict_prostitution[key]['Y'] / dict_prostitution[key]['Length'];
+                    if (key == 'NORTHERN') { 
+                        center_x -= 0.02;
+                        center_y -= 0.02; 
+                    }
+                    district_crime_centres.push([center_x, center_y, key]);
+                }
+
+                //Add the crime circles
+                var circles2 = svg2.selectAll("circle") 
+                .data(dataset_prostitution) .enter() 
+                .append("circle");
+
+                //Add district names
+                svg2.selectAll("text")
+                .data(district_crime_centres) .enter() 
+                .append("text") 
+
+                //Add district names
+                svg2.selectAll("ellipse")
+                .data(district_crime_centres) .enter() 
+                .append("ellipse")
+
+                viewK(10);
+                
+                function viewK(K) {
+                    var centres = kmeans(K);
+                    console.log(centres);
+
+                    svg2.selectAll("ellipse")
+                    .data(centres)
+                    .transition()
+                    .duration(100)
+                    .attr("cx", function(d) { return projection([d[0], d[1]])[0]; }) 
+                    .attr("cy", function(d) { return projection([d[0], d[1]])[1]; }) 
+                    .attr("rx", 10)
+                    .attr("ry", 10)
+                    .attr("fill", function(d) {  return color(d[2]); })
+                    .attr("stroke", "yellow")
+                    .attr("stroke-width", 2);
+
+                    svg2.selectAll("circle")
+                    .data(dataset_prostitution)
+                    .transition()
+                    .duration(100)
+                    .attr("cx", function(d) { return projection([d[0], d[1]])[0]; }) 
+                    .attr("cy", function(d) { return projection([d[0], d[1]])[1]; }) 
+                    .attr("r", function(d) { return 2; })
+                    .attr("fill", function(d) {  return color(d[2]); })                 
+                    
+                    svg2.selectAll("text")
+                    .data(district_crime_centres)
+                    .transition()
+                    .duration(100)
+                    .text(function(d) { return d[2]; }) 
+                    .attr("x", function(d) { return projection([d[0], d[1]])[0]; })     
+                    .attr("y", function(d) { return projection([d[0], d[1]])[1]; })
+                    .attr("font-family", "sans-serif") 
+                    .attr("font-size", "10px") 
+                    .attr("fill", "red");
+                }
+
+                function kmeans(K) {
+                    var centres = [];
+                    while(centres.length < K) {
+                        var c = Math.floor((Math.random() * dataset_prostitution.length));
+                        var duplicate = false;
+                        for(j in centres) { 
+                            if (centres[j][0] == dataset_prostitution[c][0]
+                            &&  centres[j][1] == dataset_prostitution[c][1]) { 
+                                duplicate = true; 
+                            } 
+                        }
+                        if(duplicate != true) { 
+                            centres.push([dataset_prostitution[c][0], dataset_prostitution[c][1], c]); 
+                        }
+                    }
+                    assignPointsToCentres(centres);
+                    
+                    for(i = 0; i < 10; i++) {            
+                        for (c in centres) { centres[c] = [0.0, 0.0, 0.0]; }
+                        for (d in dataset_prostitution) {
+                            var pos = parseInt(dataset_prostitution[d][2]);
+                            centres[pos][0] += parseFloat(dataset_prostitution[d][0]);
+                            centres[pos][1] += parseFloat(dataset_prostitution[d][1]);
+                            centres[pos][2] += 1.0;
+                        }      
+                        for (c in centres) { 
+                            centres[c][0] = centres[c][0]/centres[c][2]; 
+                            centres[c][1] = centres[c][1]/centres[c][2]; 
+                        } 
+                        assignPointsToCentres(centres);
+                    }
+                    for(c in centres) { centres[c][2] = c; }
+                    console.log(dataset_prostitution);
+                    
+                    return centres;
+                }
+
+                function assignPointsToCentres(centres) {
+                    for (d in dataset_prostitution) {
+                        var smallest_pos = -1;
+                        var smallest_val = Number.MAX_VALUE;
+                        for (c in centres) {
+                            var lat1 = centres[c][1];
+                            var lon1 = centres[c][0];
+                            var lat2 = dataset_prostitution[d][1];
+                            var lon2 = dataset_prostitution[d][0];
+                            var dist = getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2);
+                            if(dist <= smallest_val) {
+                                smallest_pos = c;
+                                smallest_val = dist;
+                            }
+                        }
+                        dataset_prostitution[d][2] = smallest_pos;
+                    }
+                }
+
+                function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+                    var R = 6371; // Radius of the earth in km
+                    var dLat = deg2rad(lat2-lat1);  // deg2rad below
+                    var dLon = deg2rad(lon2-lon1); 
+                    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+                    Math.sin(dLon/2) * Math.sin(dLon/2); 
+                    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+                    var d = R * c; // Distance in km
+                    return d;
+                }
+                
+                function deg2rad(deg) {
+                    return deg * (Math.PI/180)
+                }
+
+                function color(d) {
+                    if (d == 0) { return "blue"; }
+                    if (d == 1) { return "green"; } 
+                    if (d == 2) { return "grey"; }
+                    if (d == 3) { return "brown"; }
+                    if (d == 4) { return "orange"; }
+                    if (d == 5) { return "purple"; }
+                    if (d == 6) { return "turquoise"; }
+                    if (d == 7) { return "wheat"; }
+                    if (d == 8) { return "darkkhaki"; }
+                    return "pink";
+                }
             });
         </script>
     </body>
